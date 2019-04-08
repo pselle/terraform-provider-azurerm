@@ -236,6 +236,52 @@ func TestAccAzureRMFunctionApp_linuxFxVersion(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMFunctionApp_removeSiteConfig(t *testing.T) {
+	resourceName := "azurerm_function_app.test"
+	ri := tf.AccRandTimeInt()
+	rs := strings.ToLower(acctest.RandString(11))
+	config := testAccAzureRMFunctionApp_alwaysOn(ri, rs, testLocation())
+	noBlocksConfig := testAccAzureRMFunctionApp_noBlock(ri, rs, testLocation())
+	blocksEmptyConfig := testAccAzureRMFunctionApp_emptyBlock(ri, rs, testLocation())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMFunctionAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				// This configuration includes a single explicit route block
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMFunctionAppExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "site_config.#", "1"),
+				),
+			},
+			{
+				// This configuration has no route blocks at all.
+				Config: noBlocksConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMFunctionAppExists(resourceName),
+					// The route from the first step is preserved because no
+					// blocks at all means "ignore existing blocks".
+					resource.TestCheckResourceAttr(resourceName, "site_config.#", "1"),
+				),
+			},
+			{
+				// This configuration sets route to [] explicitly using the
+				// attribute syntax.
+				Config: blocksEmptyConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMFunctionAppExists(resourceName),
+					// The route from the first step is now removed, leaving us
+					// with no routes at all.
+					resource.TestCheckResourceAttr(resourceName, "site_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMFunctionApp_connectionStrings(t *testing.T) {
 	resourceName := "azurerm_function_app.test"
 	ri := tf.AccRandTimeInt()
@@ -960,6 +1006,80 @@ resource "azurerm_function_app" "test" {
   site_config {
     always_on = true
   }
+}
+`, rInt, location, rString)
+}
+
+func testAccAzureRMFunctionApp_noBlock(rInt int, rString, location string) string {
+	return fmt.Sprintf(`
+resource "azurerm_resource_group" "test" {
+  name     = "acctestRG-%[1]d"
+  location = "%[2]s"
+}
+
+resource "azurerm_storage_account" "test" {
+  name                     = "acctestsa%[3]s"
+  resource_group_name      = "${azurerm_resource_group.test.name}"
+  location                 = "${azurerm_resource_group.test.location}"
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_app_service_plan" "test" {
+  name                = "acctestASP-%[1]d"
+  location            = "${azurerm_resource_group.test.location}"
+  resource_group_name = "${azurerm_resource_group.test.name}"
+
+  sku {
+    tier = "Standard"
+    size = "S1"
+  }
+}
+
+resource "azurerm_function_app" "test" {
+  name                      = "acctest-%[1]d-func"
+  location                  = "${azurerm_resource_group.test.location}"
+  resource_group_name       = "${azurerm_resource_group.test.name}"
+  app_service_plan_id       = "${azurerm_app_service_plan.test.id}"
+  storage_connection_string = "${azurerm_storage_account.test.primary_connection_string}"
+}
+`, rInt, location, rString)
+}
+
+func testAccAzureRMFunctionApp_emptyBlock(rInt int, rString, location string) string {
+	return fmt.Sprintf(`
+resource "azurerm_resource_group" "test" {
+  name     = "acctestRG-%[1]d"
+  location = "%[2]s"
+}
+
+resource "azurerm_storage_account" "test" {
+  name                     = "acctestsa%[3]s"
+  resource_group_name      = "${azurerm_resource_group.test.name}"
+  location                 = "${azurerm_resource_group.test.location}"
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_app_service_plan" "test" {
+  name                = "acctestASP-%[1]d"
+  location            = "${azurerm_resource_group.test.location}"
+  resource_group_name = "${azurerm_resource_group.test.name}"
+
+  sku {
+    tier = "Standard"
+    size = "S1"
+  }
+}
+
+resource "azurerm_function_app" "test" {
+  name                      = "acctest-%[1]d-func"
+  location                  = "${azurerm_resource_group.test.location}"
+  resource_group_name       = "${azurerm_resource_group.test.name}"
+  app_service_plan_id       = "${azurerm_app_service_plan.test.id}"
+  storage_connection_string = "${azurerm_storage_account.test.primary_connection_string}"
+
+  site_config = []
 }
 `, rInt, location, rString)
 }
