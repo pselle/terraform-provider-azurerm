@@ -359,11 +359,12 @@ func resourceArmKubernetesCluster() *schema.Resource {
 			},
 
 			"role_based_access_control": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				ForceNew:   true,
+				MaxItems:   1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
@@ -372,10 +373,11 @@ func resourceArmKubernetesCluster() *schema.Resource {
 							ForceNew: true,
 						},
 						"azure_active_directory": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
+							Type:       schema.TypeList,
+							Optional:   true,
+							ConfigMode: schema.SchemaConfigModeAttr,
+							ForceNew:   true,
+							MaxItems:   1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_app_id": {
