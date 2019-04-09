@@ -195,10 +195,11 @@ func resourceArmKubernetesCluster() *schema.Resource {
 
 			// Optional
 			"addon_profile": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeList,
+				MaxItems:   1,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"http_application_routing": {
