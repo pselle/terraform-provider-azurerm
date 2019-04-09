@@ -203,10 +203,11 @@ func resourceArmKubernetesCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"http_application_routing": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							ForceNew: true,
-							Optional: true,
+							Type:       schema.TypeList,
+							MaxItems:   1,
+							ForceNew:   true,
+							Optional:   true,
+							ConfigMode: schema.SchemaConfigModeAttr,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
@@ -223,9 +224,10 @@ func resourceArmKubernetesCluster() *schema.Resource {
 						},
 
 						"oms_agent": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
+							Type:       schema.TypeList,
+							MaxItems:   1,
+							Optional:   true,
+							ConfigMode: schema.SchemaConfigModeAttr,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
@@ -242,9 +244,10 @@ func resourceArmKubernetesCluster() *schema.Resource {
 						},
 
 						"aci_connector_linux": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
+							Type:       schema.TypeList,
+							MaxItems:   1,
+							Optional:   true,
+							ConfigMode: schema.SchemaConfigModeAttr,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
